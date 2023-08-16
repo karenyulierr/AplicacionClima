@@ -1,12 +1,19 @@
 
 import axios from "axios";
+import { computed, ref } from "vue";
 export default function useClima(){
 
+    const clima = ref({})
+    const cargando = ref(false);
+    const error = ref('');
 
     const obtenerClima = async({cuidad, pais}) =>{
 
         //importar apikey
         const key = import.meta.env.VITE_API_KEY
+        cargando.value=true;
+        clima.value={}
+        error.value=""
 
         //obetener lat, lng
         try {
@@ -18,14 +25,27 @@ export default function useClima(){
 
          const urlClima=`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${key}`
          const {data:resultado} = await axios(urlClima);
-         console.log(resultado);
-        } catch (error) {
-            console.log(error);
+         clima.value = resultado;
+        } catch  {
+           error.value= "Cuidad no encontrada";
+        } finally{
+            cargando.value=false;
         }
 
     }
 
+    const mostrarClima = computed(()=>{
+        return Object.values(clima.value).length > 0
+    })
+
+    const formatearTemperatura = temperatura => parseInt(temperatura - 273.15 );
+
     return{
-        obtenerClima
+        obtenerClima,
+        clima,
+        mostrarClima,
+        formatearTemperatura,
+        cargando,
+        error
     }
 }
